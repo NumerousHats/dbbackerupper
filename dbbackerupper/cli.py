@@ -2,6 +2,10 @@
 
 import sys
 import click
+import configparser
+import json
+from pathlib import Path
+from appdirs import AppDirs
 from .dumper import DbDumper
 
 
@@ -14,9 +18,30 @@ from .dumper import DbDumper
 @click.option('-s', '--simulate', 'simulate', help="Run in simulation mode: do not execute dump", is_flag=True)
 def main(verbose, debug, mailto, prefix, tempdir, simulate):
     """DB BackerUpper: a CLI tool to create MySQL database backups and email the results to a Gmail account."""
+
+    dirs = AppDirs("dbbackerupper", "UHEC")
+    config_file = Path(dirs.user_data_dir) / "dbbackerupper.ini"
+    config = configparser.ConfigParser()
+    config.read(config_file)
+    config_vals = config["dbbackerupper"]
+
+    if "mailto" in config_vals and mailto is None:
+        mailto = config_vals["mailto"]
+
+    if "prefix" in config_vals and prefix is None:
+        prefix = config_vals["prefix"]
+
+    if "tempdir" in config_vals and tempdir is None:
+        tempdir = config_vals["tempdir"]
+
+    if "databases" in config_vals:
+        databases = json.loads(config_vals["databases"])
+    else:
+        databases = []
+
     dumper = DbDumper(debug=debug, verbose=verbose, nowarn=False, simulate=simulate,
-                      base_directory=tempdir, prefix=prefix)
-    dumper.run_shell("ls -l")
+                      base_directory=tempdir, prefix=prefix, dbs=databases)
+    dumper.dump()
 
 
 if __name__ == "__main__":

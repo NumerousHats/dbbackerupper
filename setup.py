@@ -13,6 +13,7 @@ with open('HISTORY.rst') as history_file:
 requirements = [
     'Click>=7.0',
     'yagmail>=0.11',
+    'appdirs',
 ]
 
 setup_requirements = ['pytest-runner', ]
