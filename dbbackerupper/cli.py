@@ -4,20 +4,27 @@ import sys
 import click
 import configparser
 import json
+from yagmail import SMTP
 from pathlib import Path
 from appdirs import AppDirs
 from .dumper import DbDumper
 
 
-@click.command()
+@click.group()
+def main():
+    """DB BackerUpper: a CLI tool to create MySQL database backups and email the results to a Gmail account."""
+    pass
+
+
+@main.command()
 @click.option('-v', '--verbose', 'verbose', is_flag=True, help="Run in verbose mode")
 @click.option('-d', '--debug', 'debug', is_flag=True, help="Run in debug mode")
 @click.option('--mailto', help="Email address to mail the DB dump.")
 @click.option('--prefix', help="tar.gz filename prefix")
 @click.option('--tempdir', help="Temp directory for dump storage")
 @click.option('-s', '--simulate', 'simulate', help="Run in simulation mode: do not execute dump", is_flag=True)
-def main(verbose, debug, mailto, prefix, tempdir, simulate):
-    """DB BackerUpper: a CLI tool to create MySQL database backups and email the results to a Gmail account."""
+def dump(verbose, debug, mailto, prefix, tempdir, simulate):
+    """Dump databases."""
 
     dirs = AppDirs("dbbackerupper", "UHEC")
     config_file = Path(dirs.user_data_dir) / "dbbackerupper.ini"
@@ -45,6 +52,13 @@ def main(verbose, debug, mailto, prefix, tempdir, simulate):
     dumper.cleanup()
 
     # TODO send the email
+
+
+@main.command()
+@click.argument('address')
+def authorize(address):
+    """Run OAuth."""
+    yag = SMTP(address, oauth2_file="~/oauth2_creds.json")
 
 
 if __name__ == "__main__":
