@@ -41,7 +41,10 @@ def main(verbose, debug, mailto, prefix, tempdir, simulate):
 
     dumper = DbDumper(debug=debug, verbose=verbose, nowarn=False, simulate=simulate,
                       base_directory=tempdir, prefix=prefix, dbs=databases)
-    dumper.dump()
+    filename = dumper.dump()
+    dumper.cleanup()
+
+    # TODO send the email
 
 
 if __name__ == "__main__":

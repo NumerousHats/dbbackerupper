@@ -1,6 +1,11 @@
 """DB Dumper.
 
 Dump MySQL database(s).
+
+It assumes that you have used "mysql_config_editor set" to securely store the appropriate
+database username and password into the login-path "backups". Note that you must enclose
+the password in quotes if it contains a "#" character (https://unix.stackexchange.com/a/352072/416720)
+
 """
 
 from datetime import datetime
@@ -35,7 +40,7 @@ class DbDumper:
         mysqldump via run_shell() to allow for simulation.
 
         Returns:
-            datetime object of the date and time of the backup.
+            Filename that the dump was saved to.
         """
 
         for db in self.dbs:
@@ -46,8 +51,8 @@ class DbDumper:
         filename = "{0}{1}.tar.gz".format(self.prefix, dt_string)
         self.run_shell("cd {}; tar czf {} *.sql".format(self.base_directory, filename))
         self.run_shell("rm -f {}/*.sql".format(self.base_directory))
-        return dt
+        return "{}/{}".format(self.base_directory, filename)
 
     def cleanup(self):
         """Delete dump files older than DbDumper.keep_days."""
-        pass
+        print("Would be running cleanup now...")
