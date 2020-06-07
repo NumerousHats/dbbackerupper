@@ -49,16 +49,12 @@ def dump(verbose, debug, mailto, prefix, tempdir, simulate):
     dumper = DbDumper(debug=debug, verbose=verbose, nowarn=False, simulate=simulate,
                       base_directory=tempdir, prefix=prefix, dbs=databases)
     filename = dumper.dump()
-    dumper.cleanup()
+    # dumper.cleanup()
 
-    # TODO send the email
-
-
-@main.command()
-@click.argument('address')
-def authorize(address):
-    """Run OAuth."""
-    yag = SMTP(address, oauth2_file="~/oauth2_creds.json")
+    dirs = AppDirs("dbbackerupper", "UHEC")
+    creds_file = Path(dirs.user_data_dir) / "oauth2_creds.json"
+    yag = SMTP(mailto, oauth2_file=creds_file)
+    yag.send(subject="Database backup", contents=filename)
 
 
 if __name__ == "__main__":
