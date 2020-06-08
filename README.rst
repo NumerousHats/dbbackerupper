@@ -1,12 +1,13 @@
 ==============
-DB BackerUpper
+DBBackerUpper
 ==============
 
 
-Simple webserver database backup and emailing.
+Simple tool to create MySQL database dumps on a server and mail the resulting
+.tar.gz file via Gmail.
 
-This is a minimal refactoring of some truly lousy old code that I'm not terribly proud of,
-but I just need something functional...
+This is a refactoring of some lousy old code that I'm not terribly proud of,
+but I just need something functional... Maybe it'll be useful for somebody else.
 
 
 * Free software: MIT license

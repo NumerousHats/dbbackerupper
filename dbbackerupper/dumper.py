@@ -16,14 +16,12 @@ import subprocess
 class DbDumper:
     keep_days = 7
 
-    def __init__(self, debug=False, verbose=False, nowarn=False, simulate=False,
-                 base_directory="", prefix="", dbs=None):
-        self.debug = debug
+    def __init__(self, verbose=False, simulate=False, base_directory="", prefix="", dbs=None, mailto=None):
         self.verbose = verbose
-        self.nowarn = nowarn
         self.simulate = simulate
         self.base_directory = base_directory
         self.prefix = prefix
+        self.mailto = mailto
         self.dbs = dbs if type(dbs) is list else []
 
     def run_shell(self, command):
