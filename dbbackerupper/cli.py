@@ -8,6 +8,10 @@ from pathlib import Path
 from appdirs import AppDirs
 from .dumper import DbDumper
 
+from pydrive.drive import GoogleDrive
+from pydrive.auth import GoogleAuth
+import os
+
 
 @click.group()
 @click.option('-v', '--verbose', 'verbose', is_flag=True, help="Run in verbose mode")
@@ -46,14 +50,7 @@ def main(ctx, verbose, prefix, tempdir, simulate, mailto):
 @click.pass_obj
 def dump(dumper):
     """Dump databases."""
-
     filename = dumper.dump()
-
-    if dumper.mailto != "None" and not dumper.simulate:
-        dirs = AppDirs("dbbackerupper", "UHEC")
-        creds_file = Path(dirs.user_data_dir) / "oauth2_creds.json"
-        yag = SMTP(dumper.mailto, oauth2_file=creds_file)
-        yag.send(subject="Database backup", contents=filename)
 
 
 @main.command()
@@ -61,6 +58,38 @@ def dump(dumper):
 def cleanup(dumper):
     """Delete old DB dumps."""
     dumper.cleanup()
+
+
+@main.command()
+@click.pass_obj
+def gdrive(dumper):
+    # Below code does the authentication
+    # part of the code
+    gauth = GoogleAuth()
+
+    # Creates local webserver and auto
+    # handles authentication.
+    gauth.LocalWebserverAuth()
+    drive = GoogleDrive(gauth)
+
+    # replace the value of this variable
+    # with the absolute path of the directory
+    path = dumper.base_directory
+
+    # iterating thought all the files/folder
+    # of the desired directory
+    for x in os.listdir(path):
+        file = drive.CreateFile({'title': x})
+        file.SetContentFile(os.path.join(path, x))
+        file.Upload()
+
+        # Due to a known bug in pydrive if we
+        # don't empty the variable used to
+        # upload the files to Google Drive the
+        # file stays open in memory and causes a
+        # memory leak, therefore preventing its
+        # deletion
+        file = None
 
 
 if __name__ == "__main__":
