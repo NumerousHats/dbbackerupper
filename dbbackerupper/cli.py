@@ -4,7 +4,6 @@ import sys
 import click
 import configparser
 import json
-from yagmail import SMTP
 from pathlib import Path
 from appdirs import AppDirs
 from .dumper import DbDumper
