@@ -63,7 +63,7 @@ def cleanup(dumper):
 @main.command()
 @click.pass_obj
 def gdrive(dumper):
-    GoogleAuth.DEFAULT_SETTINGS['client_config_file'] = dumper.base_directory
+    GoogleAuth.DEFAULT_SETTINGS['client_config_file'] = "{}/client_secrets.json".format(dumper.base_directory)
     # Below code does the authentication
     # part of the code
     gauth = GoogleAuth()
