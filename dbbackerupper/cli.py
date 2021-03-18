@@ -48,13 +48,14 @@ def main(ctx, verbose, prefix, tempdir, simulate, mailto):
 def dump(dumper):
     """Dump databases."""
 
-    filename = dumper.dump()
+    filenames = dumper.dump()
 
     if dumper.mailto != "None" and not dumper.simulate:
         dirs = AppDirs("dbbackerupper", "UHEC")
         creds_file = Path(dirs.user_data_dir) / "oauth2_creds.json"
         yag = SMTP(dumper.mailto, oauth2_file=creds_file)
-        yag.send(subject="Database backup", contents=filename)
+        for filename in filenames:
+            yag.send(subject="Database backup", contents=filename)
 
 
 @main.command()

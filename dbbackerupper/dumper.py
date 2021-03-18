@@ -34,22 +34,25 @@ class DbDumper:
     def dump(self):
         """Generates a database dump.
 
-        Dump .tar.gz file is placed in the directory self.base_directory/destination by executing
+        Dump .tar.gz files (one per database) is placed in the directory self.base_directory/destination by executing
         mysqldump via run_shell() to allow for simulation.
 
         Returns:
-            Filename that the dump was saved to.
+            Filenames that the dumps were saved to.
         """
+
+        files = []
+        dt = datetime.today()
+        dt_string = dt.strftime("%Y-%m-%dT%H-%M-%S")
 
         for db in self.dbs:
             self.run_shell("mysqldump --login-path=backups {0} > {1}/{0}.sql".format(db, self.base_directory))
+            filename = "{0}_{1}_{2}.tar.gz".format(self.prefix, db, dt_string)
+            self.run_shell("cd {}; tar czf {} *.sql".format(self.base_directory, filename))
+            self.run_shell("rm -f {}/*.sql".format(self.base_directory))
+            files.append("{}/{}".format(self.base_directory, filename))
 
-        dt = datetime.today()
-        dt_string = dt.strftime("%Y-%m-%dT%H-%M-%S")
-        filename = "{0}{1}.tar.gz".format(self.prefix, dt_string)
-        self.run_shell("cd {}; tar czf {} *.sql".format(self.base_directory, filename))
-        self.run_shell("rm -f {}/*.sql".format(self.base_directory))
-        return "{}/{}".format(self.base_directory, filename)
+        return files
 
     def cleanup(self):
         """Delete dump files older than DbDumper.keep_days."""
