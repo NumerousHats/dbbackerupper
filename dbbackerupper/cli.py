@@ -1,7 +1,6 @@
 """Console script for dbbackerupper."""
 
 import sys
-import os
 import configparser
 import json
 from pathlib import Path
@@ -9,7 +8,6 @@ from pathlib import Path
 from appdirs import AppDirs
 import click
 import boto3
-from dotenv import load_dotenv
 
 from .dumper import DbDumper
 
@@ -48,7 +46,7 @@ def main(ctx, verbose, prefix, tempdir, bucket, simulate):
         raise ValueError("both access key id and secret access key must be provided in config file")
 
     ctx.obj = DbDumper(verbose=verbose, simulate=simulate, base_directory=tempdir,
-                       prefix=prefix, dbs=databases, aws_key = aws_key, bucket=bucket)
+                       prefix=prefix, dbs=databases, aws_key=aws_key, bucket=bucket)
 
 
 @main.command()
@@ -58,12 +56,10 @@ def dump(dumper):
 
     filenames = dumper.dump()
 
-    bucket_name = 'UHEC-website-backups'  # name of the bucket
-
     s3_client = boto3.client('s3', dumper.aws_access_key_id, dumper.aws_secret_access_key)
 
     for file_name in filenames:
-        response = s3_client.upload_file(file_name, bucket_name, file_name)
+        response = s3_client.upload_file(file_name, dumper.bucket, file_name)
 
 
 @main.command()
