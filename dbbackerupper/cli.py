@@ -1,12 +1,16 @@
 """Console script for dbbackerupper."""
 
 import sys
-import click
+import os
 import configparser
 import json
-from yagmail import SMTP
 from pathlib import Path
+
 from appdirs import AppDirs
+import click
+import boto3
+from dotenv import load_dotenv
+
 from .dumper import DbDumper
 
 
@@ -15,10 +19,9 @@ from .dumper import DbDumper
 @click.option('--prefix', help="tar.gz filename prefix")
 @click.option('--tempdir', help="Temp directory for dump storage")
 @click.option('-s', '--simulate', 'simulate', help="Run in simulation mode: do not execute dump", is_flag=True)
-@click.option('--mailto', help="Email address where to mail the DB dump ('None' to prevent mailing).")
 @click.pass_context
-def main(ctx, verbose, prefix, tempdir, simulate, mailto):
-    """DBBackerUpper: a CLI tool to create MySQL database backups and email the results using Gmail."""
+def main(ctx, verbose, prefix, tempdir, bucket, simulate):
+    """DBBackerUpper: a CLI tool to create MySQL database backups and upload to S3."""
     dirs = AppDirs("dbbackerupper", "UHEC")
     config_file = Path(dirs.user_data_dir) / "dbbackerupper.ini"
     config = configparser.ConfigParser()
@@ -36,11 +39,16 @@ def main(ctx, verbose, prefix, tempdir, simulate, mailto):
     else:
         databases = []
 
-    if "mailto" in config_vals and mailto is None:
-        mailto = config_vals["mailto"]
+    if "bucket" in config_vals and bucket is None:
+        bucket = config_vals["bucket"]
+
+    if "aws_access_key_id" in config_vals and "aws_secret_access_key" in config_vals:
+        aws_key = [config_vals["aws_access_key_id"], config_vals["aws_secret_access_key"]]
+    else:
+        raise ValueError("both access key id and secret access key must be provided in config file")
 
     ctx.obj = DbDumper(verbose=verbose, simulate=simulate, base_directory=tempdir,
-                       prefix=prefix, dbs=databases, mailto=mailto)
+                       prefix=prefix, dbs=databases, aws_key = aws_key, bucket=bucket)
 
 
 @main.command()
@@ -50,12 +58,12 @@ def dump(dumper):
 
     filenames = dumper.dump()
 
-    if dumper.mailto != "None" and not dumper.simulate:
-        dirs = AppDirs("dbbackerupper", "UHEC")
-        creds_file = Path(dirs.user_data_dir) / "oauth2_creds.json"
-        yag = SMTP(dumper.mailto, oauth2_file=creds_file)
-        for filename in filenames:
-            yag.send(subject="Database backup", contents=filename)
+    bucket_name = 'UHEC-website-backups'  # name of the bucket
+
+    s3_client = boto3.client('s3', dumper.aws_access_key_id, dumper.aws_secret_access_key)
+
+    for file_name in filenames:
+        response = s3_client.upload_file(file_name, bucket_name, file_name)
 
 
 @main.command()

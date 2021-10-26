@@ -16,13 +16,15 @@ import subprocess
 class DbDumper:
     keep_days = 7
 
-    def __init__(self, verbose=False, simulate=False, base_directory="", prefix="", dbs=None, mailto=None):
+    def __init__(self, verbose=False, simulate=False, base_directory="", prefix="", dbs=None,
+                 aws_key=None, bucket=None):
         self.verbose = verbose
         self.simulate = simulate
         self.base_directory = base_directory
         self.prefix = prefix
-        self.mailto = mailto
         self.dbs = dbs if type(dbs) is list else []
+        self.bucket = bucket
+        self.aws_key = aws_key
 
     def run_shell(self, command):
         """Run (or simulate the running) of a command via subprocess.call."""
