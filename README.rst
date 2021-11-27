@@ -3,11 +3,11 @@ DBBackerUpper
 ==============
 
 
-Simple tool to create MySQL database dumps on a server and mail the resulting
-.tar.gz file via Gmail.
+Simple tool to create MySQL database dumps on a server and save the resulting
+.tar.gz file to an AWS S3 bucket.
 
-This is a refactoring of some lousy old code that I'm not terribly proud of,
-but I just need something functional... Maybe it'll be useful for somebody else.
+This is a refactoring of some lousy old code,
+but I just need something functional quick... Maybe it'll be useful for somebody else.
 
 
 * Free software: MIT license
