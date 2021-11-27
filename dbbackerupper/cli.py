@@ -11,8 +11,6 @@ import boto3
 
 from .dumper import DbDumper
 
-from pydrive.drive import GoogleDrive
-from pydrive.auth import GoogleAuth
 import os
 
 
