@@ -12,8 +12,13 @@ with open('HISTORY.rst') as history_file:
 
 requirements = [
     'Click>=7.0',
+<<<<<<< HEAD
     'pydrive',
+=======
+>>>>>>> s3
     'appdirs',
+    'boto3',
+    'python-dotenv',
 ]
 
 setup_requirements = ['pytest-runner', ]
@@ -52,6 +57,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/NumerousHats/dbbackerupper',
-    version='0.2.3',
+    version='0.2.4',
     zip_safe=False,
 )

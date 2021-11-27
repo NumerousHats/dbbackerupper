@@ -16,41 +16,50 @@ import subprocess
 class DbDumper:
     keep_days = 7
 
-    def __init__(self, verbose=False, simulate=False, base_directory="", prefix="", dbs=None, mailto=None):
+    def __init__(self, verbose=False, simulate=False, base_directory="", prefix="", dbs=None,
+                 aws_key=None, bucket=None):
         self.verbose = verbose
         self.simulate = simulate
         self.base_directory = base_directory
         self.prefix = prefix
-        self.mailto = mailto
         self.dbs = dbs if type(dbs) is list else []
+        self.bucket = bucket
+        self.aws_key = aws_key
 
     def run_shell(self, command):
         """Run (or simulate the running) of a command via subprocess.call."""
         if self.simulate:
-            print(command)
+            return "{} at {}".format(command, datetime.now())
         else:
             subprocess.call(command, shell=True)
 
     def dump(self):
         """Generates a database dump.
 
-        Dump .tar.gz file is placed in the directory self.base_directory/destination by executing
+        Dump .tar.gz files (one per database) is placed in the directory self.base_directory/destination by executing
         mysqldump via run_shell() to allow for simulation.
 
         Returns:
-            Filename that the dump was saved to.
+            Filenames that the dumps were saved to.
         """
 
-        for db in self.dbs:
-            self.run_shell("mysqldump --login-path=backups {0} > {1}/{0}.sql".format(db, self.base_directory))
-
+        files = []
         dt = datetime.today()
         dt_string = dt.strftime("%Y-%m-%dT%H-%M-%S")
-        filename = "{0}{1}.tar.gz".format(self.prefix, dt_string)
-        self.run_shell("cd {}; tar czf {} *.sql".format(self.base_directory, filename))
-        self.run_shell("rm -f {}/*.sql".format(self.base_directory))
-        return "{}/{}".format(self.base_directory, filename)
+
+        for db in self.dbs:
+            dump_out = self.run_shell("mysqldump --login-path=backups {0} > {1}/{0}.sql".format(db,
+                                                                                                self.base_directory))
+            if self.simulate:
+                subprocess.call("echo '{2}' > {1}/{0}.sql".format(db, self.base_directory, dump_out), shell=True)
+
+        filename = "{0}_{1}.tar.gz".format(self.prefix, dt_string)
+        subprocess.call("cd {}; tar czf {} *.sql".format(self.base_directory, filename), shell=True)
+        subprocess.call("rm -f {}/*.sql".format(self.base_directory), shell=True)
+        files.append("{}/{}".format(self.base_directory, filename))
+
+        return files
 
     def cleanup(self):
         """Delete dump files older than DbDumper.keep_days."""
-        print("Would be running cleanup now...")
+        print("Would be running cleanup now, if only this feature were implemented...")
