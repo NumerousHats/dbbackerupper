@@ -73,38 +73,5 @@ def cleanup(dumper):
     dumper.cleanup()
 
 
-@main.command()
-@click.pass_obj
-def gdrive(dumper):
-    GoogleAuth.DEFAULT_SETTINGS['client_config_file'] = "{}/client_secrets.json".format(dumper.base_directory)
-    # Below code does the authentication
-    # part of the code
-    gauth = GoogleAuth()
-
-    # Creates local webserver and auto
-    # handles authentication.
-    gauth.LocalWebserverAuth()
-    drive = GoogleDrive(gauth)
-
-    # replace the value of this variable
-    # with the absolute path of the directory
-    path = dumper.base_directory
-
-    # iterating thought all the files/folder
-    # of the desired directory
-    for x in os.listdir(path):
-        file = drive.CreateFile({'title': x})
-        file.SetContentFile(os.path.join(path, x))
-        file.Upload()
-
-        # Due to a known bug in pydrive if we
-        # don't empty the variable used to
-        # upload the files to Google Drive the
-        # file stays open in memory and causes a
-        # memory leak, therefore preventing its
-        # deletion
-        file = None
-
-
 if __name__ == "__main__":
     sys.exit(main())  # pragma: no cover

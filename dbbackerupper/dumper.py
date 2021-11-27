@@ -7,13 +7,12 @@ database username and password into the login-path "backups". Note that you must
 the password in quotes if it contains a "#" character (https://unix.stackexchange.com/a/352072/416720)
 
 """
+
 import os
 import re
 from datetime import datetime
 from datetime import timedelta
 import subprocess
-from os import listdir
-from os.path import isfile, join
 
 
 class DbDumper:
@@ -71,7 +70,8 @@ class DbDumper:
         filename_pattern = re.escape(self.prefix) + r"_(\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}).tar.gz"
         keep_days = timedelta(days=DbDumper.keep_days)
 
-        for file in [f for f in listdir(self.base_directory) if isfile(join(self.base_directory, f))]:
+        for file in [f for f in os.listdir(self.base_directory)
+                     if os.path.isfile(os.path.join(self.base_directory, f))]:
             date_match = re.match(filename_pattern, file)
             if date_match:
                 if now - datetime.strptime(date_match.group(1), "%Y-%m-%dT%H-%M-%S") > keep_days:
