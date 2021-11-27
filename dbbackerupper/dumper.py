@@ -29,7 +29,7 @@ class DbDumper:
     def run_shell(self, command):
         """Run (or simulate the running) of a command via subprocess.call."""
         if self.simulate:
-            print(command)
+            return "{} at {}".format(command, datetime.now())
         else:
             subprocess.call(command, shell=True)
 
@@ -48,14 +48,18 @@ class DbDumper:
         dt_string = dt.strftime("%Y-%m-%dT%H-%M-%S")
 
         for db in self.dbs:
-            self.run_shell("mysqldump --login-path=backups {0} > {1}/{0}.sql".format(db, self.base_directory))
-            filename = "{0}_{1}_{2}.tar.gz".format(self.prefix, db, dt_string)
-            self.run_shell("cd {}; tar czf {} *.sql".format(self.base_directory, filename))
-            self.run_shell("rm -f {}/*.sql".format(self.base_directory))
-            files.append("{}/{}".format(self.base_directory, filename))
+            dump_out = self.run_shell("mysqldump --login-path=backups {0} > {1}/{0}.sql".format(db,
+                                                                                                self.base_directory))
+            if self.simulate:
+                subprocess.call("echo '{2}' > {1}/{0}.sql".format(db, self.base_directory, dump_out), shell=True)
+
+        filename = "{0}_{1}.tar.gz".format(self.prefix, dt_string)
+        subprocess.call("cd {}; tar czf {} *.sql".format(self.base_directory, filename), shell=True)
+        subprocess.call("rm -f {}/*.sql".format(self.base_directory), shell=True)
+        files.append("{}/{}".format(self.base_directory, filename))
 
         return files
 
     def cleanup(self):
         """Delete dump files older than DbDumper.keep_days."""
-        print("Would be running cleanup now...")
+        print("Would be running cleanup now, if only this feature were implemented...")
