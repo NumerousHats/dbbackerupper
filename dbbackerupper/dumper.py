@@ -49,7 +49,7 @@ class DbDumper:
 
         for db in self.dbs:
             dump_out = self.run_shell(
-                "mysqldump --single-transaction --routines --login-path=backups {0} > {1}/{0}.sql".format(db,
+                "mysqldump --login-path=backups {0} --single-transaction --routines > {1}/{0}.sql".format(db,
                                                                                                 self.base_directory))
             if self.simulate:
                 subprocess.call("echo '{2}' > {1}/{0}.sql".format(db, self.base_directory, dump_out), shell=True)
