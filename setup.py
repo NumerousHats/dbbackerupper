@@ -12,10 +12,6 @@ with open('HISTORY.rst') as history_file:
 
 requirements = [
     'Click>=7.0',
-<<<<<<< HEAD
-    'pydrive',
-=======
->>>>>>> s3
     'appdirs',
     'boto3',
     'python-dotenv',
