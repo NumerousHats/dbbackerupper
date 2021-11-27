@@ -7,14 +7,17 @@ database username and password into the login-path "backups". Note that you must
 the password in quotes if it contains a "#" character (https://unix.stackexchange.com/a/352072/416720)
 
 """
-
+import os
+import re
 from datetime import datetime
 from datetime import timedelta
 import subprocess
+from os import listdir
+from os.path import isfile, join
 
 
 class DbDumper:
-    keep_days = 7
+    keep_days = 14
 
     def __init__(self, verbose=False, simulate=False, base_directory="", prefix="", dbs=None,
                  aws_key=None, bucket=None):
@@ -63,4 +66,13 @@ class DbDumper:
 
     def cleanup(self):
         """Delete dump files older than DbDumper.keep_days."""
-        print("Would be running cleanup now, if only this feature were implemented...")
+
+        now = datetime.now()
+        filename_pattern = re.escape(self.prefix) + r"_(\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}).tar.gz"
+        keep_days = timedelta(days=DbDumper.keep_days)
+
+        for file in [f for f in listdir(self.base_directory) if isfile(join(self.base_directory, f))]:
+            date_match = re.match(filename_pattern, file)
+            if date_match:
+                if now - datetime.strptime(date_match.group(1), "%Y-%m-%dT%H-%M-%S") > keep_days:
+                    os.remove(file)
