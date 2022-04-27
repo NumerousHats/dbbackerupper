@@ -19,7 +19,7 @@ class DbDumper:
     keep_days = 14
 
     def __init__(self, verbose=False, simulate=False, base_directory="", prefix="", dbs=None,
-                 aws_key=None, bucket=None):
+                 aws_key=None, bucket=None, loginpath=None):
         self.verbose = verbose
         self.simulate = simulate
         self.base_directory = base_directory
@@ -27,6 +27,7 @@ class DbDumper:
         self.dbs = dbs if type(dbs) is list else []
         self.bucket = bucket
         self.aws_key = aws_key
+        self.loginpath = loginpath
 
     def run_shell(self, command):
         """Run (or simulate the running) of a command via subprocess.call."""
@@ -51,8 +52,9 @@ class DbDumper:
 
         for db in self.dbs:
             dump_out = self.run_shell(
-                "mysqldump --login-path=backups {0} --single-transaction --routines > {1}/{0}.sql".format(db,
-                                                                                                self.base_directory))
+                "mysqldump --login-path={2} {0} --single-transaction --routines > {1}/{0}.sql".format(db,
+                                                                                                self.base_directory,
+                                                                                                self.loginpath))
             if self.simulate:
                 subprocess.call("echo '{2}' > {1}/{0}.sql".format(db, self.base_directory, dump_out), shell=True)
 

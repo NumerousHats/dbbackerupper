@@ -20,8 +20,9 @@ import os
 @click.option('--tempdir', help="Temp directory for dump storage")
 @click.option('-s', '--simulate', 'simulate', help="Run in simulation mode: do not execute dump", is_flag=True)
 @click.option('--bucket', help="AWS S3 bucket name")
+@click.option('--loginpath', help="mysqldump login-path created with mysql_config_editor")
 @click.pass_context
-def main(ctx, verbose, prefix, tempdir, simulate, bucket):
+def main(ctx, verbose, prefix, tempdir, simulate, bucket, loginpath):
     """DBBackerUpper: a CLI tool to create MySQL database backups and upload to S3."""
     dirs = AppDirs("dbbackerupper", "UHEC")
     config_file = Path(dirs.user_data_dir) / "dbbackerupper.ini"
@@ -48,22 +49,27 @@ def main(ctx, verbose, prefix, tempdir, simulate, bucket):
     else:
         raise ValueError("both access key id and secret access key must be provided in config file")
 
+    if "loginpath" in config_vals and loginpath is None:
+        loginpath = config_vals["loginpath"]
+
     ctx.obj = DbDumper(verbose=verbose, simulate=simulate, base_directory=tempdir,
-                       prefix=prefix, dbs=databases, aws_key=aws_key, bucket=bucket)
+                       prefix=prefix, dbs=databases, aws_key=aws_key, bucket=bucket, loginpath=loginpath)
 
 
 @main.command()
+@click.option('--no-upload', is_flag=True)
 @click.pass_obj
-def dump(dumper):
+def dump(dumper, no_upload):
     """Dump databases."""
 
     filenames = dumper.dump()
 
-    s3_client = boto3.client('s3', aws_access_key_id=dumper.aws_key["id"],
-                             aws_secret_access_key=dumper.aws_key["secret"])
+    if not no_upload:
+        s3_client = boto3.client('s3', aws_access_key_id=dumper.aws_key["id"],
+                                 aws_secret_access_key=dumper.aws_key["secret"])
 
-    for file_name in filenames:
-        response = s3_client.upload_file(file_name, dumper.bucket, os.path.basename(file_name))
+        for file_name in filenames:
+            response = s3_client.upload_file(file_name, dumper.bucket, os.path.basename(file_name))
 
 
 @main.command()
