@@ -52,7 +52,7 @@ class DbDumper:
 
         for db in self.dbs:
             dump_out = self.run_shell(
-                "mysqldump --login-path={2} {0} --single-transaction --routines --set-gtid-purged=OFF > {1}/{0}.sql".format(db,
+                "mysqldump --login-path={2} {0} --single-transaction --routines --set-gtid-purged=OFF --column-statistics=0 > {1}/{0}.sql".format(db,
                                                                                                 self.base_directory,
                                                                                                 self.loginpath))
             if self.simulate:
