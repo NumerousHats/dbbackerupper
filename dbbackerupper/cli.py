@@ -21,8 +21,9 @@ import os
 @click.option('-s', '--simulate', 'simulate', help="Run in simulation mode: do not execute dump", is_flag=True)
 @click.option('--bucket', help="AWS S3 bucket name")
 @click.option('--loginpath', help="mysqldump login-path created with mysql_config_editor")
+@click.option('--database', help="database to back up")
 @click.pass_context
-def main(ctx, verbose, prefix, tempdir, simulate, bucket, loginpath):
+def main(ctx, verbose, prefix, tempdir, simulate, bucket, loginpath, database):
     """DBBackerUpper: a CLI tool to create MySQL database backups and upload to S3."""
     dirs = AppDirs("dbbackerupper", "UHEC")
     config_file = Path(dirs.user_data_dir) / "dbbackerupper.ini"
@@ -40,6 +41,9 @@ def main(ctx, verbose, prefix, tempdir, simulate, bucket, loginpath):
         databases = json.loads(config_vals["databases"])
     else:
         databases = []
+
+    if database is not None:
+        databases = [database]
 
     if "bucket" in config_vals and bucket is None:
         bucket = config_vals["bucket"]
