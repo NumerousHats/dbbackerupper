@@ -36,6 +36,9 @@ class DbDumper:
         else:
             subprocess.call(command, shell=True)
 
+    def override_db(self, new_databases):
+        self.dbs = new_databases
+
     def dump(self):
         """Generates a database dump.
 
@@ -52,7 +55,7 @@ class DbDumper:
 
         for db in self.dbs:
             dump_out = self.run_shell(
-                "mysqldump --login-path={2} {0} --single-transaction --routines --set-gtid-purged=OFF --column-statistics=0 > {1}/{0}.sql".format(db,
+                "mysqldump --login-path={2} {0} --no-tablespaces --single-transaction --routines --set-gtid-purged=OFF --column-statistics=0 > {1}/{0}.sql".format(db,
                                                                                                 self.base_directory,
                                                                                                 self.loginpath))
             if self.simulate:
