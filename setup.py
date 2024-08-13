@@ -15,6 +15,7 @@ requirements = [
     'appdirs',
     'boto3',
     'python-dotenv',
+    'azure-storage-blob'
 ]
 
 setup_requirements = ['pytest-runner', ]

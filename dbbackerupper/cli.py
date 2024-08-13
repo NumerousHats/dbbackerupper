@@ -8,6 +8,7 @@ from pathlib import Path
 from appdirs import AppDirs
 import click
 import boto3
+from azure.storage.blob import BlobClient
 
 from .dumper import DbDumper
 
@@ -19,11 +20,10 @@ import os
 @click.option('--prefix', help="tar.gz filename prefix")
 @click.option('--tempdir', help="Temp directory for dump storage")
 @click.option('-s', '--simulate', 'simulate', help="Run in simulation mode: do not execute dump", is_flag=True)
-@click.option('--bucket', help="AWS S3 bucket name")
+@click.option('--bucket', help="AWS S3 bucket or Azure container name")
 @click.option('--loginpath', help="mysqldump login-path created with mysql_config_editor")
-@click.option('--database', help="database to back up")
 @click.pass_context
-def main(ctx, verbose, prefix, tempdir, simulate, bucket, loginpath, database):
+def main(ctx, verbose, prefix, tempdir, simulate, bucket, loginpath):
     """DBBackerUpper: a CLI tool to create MySQL database backups and upload to S3."""
     dirs = AppDirs("dbbackerupper", "UHEC")
     config_file = Path(dirs.user_data_dir) / "dbbackerupper.ini"
@@ -42,45 +42,49 @@ def main(ctx, verbose, prefix, tempdir, simulate, bucket, loginpath, database):
     else:
         databases = []
 
-    if database is not None:
-        databases = [database]
-
     if "bucket" in config_vals and bucket is None:
         bucket = config_vals["bucket"]
 
-    if "aws_access_key_id" in config_vals and "aws_secret_access_key" in config_vals:
-        aws_key = {"id": config_vals["aws_access_key_id"], "secret": config_vals["aws_secret_access_key"]}
+    # if "aws_access_key_id" in config_vals and "aws_secret_access_key" in config_vals:
+    #     aws_key = {"id": config_vals["aws_access_key_id"], "secret": config_vals["aws_secret_access_key"]}
+    # else:
+    #     raise ValueError("both access key id and secret access key must be provided in config file")
+
+    if "azure_connection_string" in config_vals:
+        azure_connection_string = config_vals["azure_connection_string"]
     else:
-        raise ValueError("both access key id and secret access key must be provided in config file")
+        raise ValueError("Azure connection string must be provided in config file")
 
     if "loginpath" in config_vals and loginpath is None:
         loginpath = config_vals["loginpath"]
 
     ctx.obj = DbDumper(verbose=verbose, simulate=simulate, base_directory=tempdir,
-                       prefix=prefix, dbs=databases, aws_key=aws_key, bucket=bucket, loginpath=loginpath)
+                       prefix=prefix, dbs=databases, aws_key=aws_key, azure_key=azure_connection_string,
+                       bucket=bucket, loginpath=loginpath)
 
 
 @main.command()
 @click.option('--no-upload', is_flag=True)
+@click.argument('database_list', nargs=-1)
 @click.pass_obj
-def dump(dumper, no_upload):
+def dump(dumper, no_upload, database_list):
     """Dump databases."""
+
+    if database_list and type(database_list) is list:
+        dumper.override_db(database_list)
 
     filenames = dumper.dump()
 
     if not no_upload:
-        s3_client = boto3.client('s3', aws_access_key_id=dumper.aws_key["id"],
-                                 aws_secret_access_key=dumper.aws_key["secret"])
+        # s3_client = boto3.client('s3', aws_access_key_id=dumper.aws_key["id"],
+        #                          aws_secret_access_key=dumper.aws_key["secret"])
 
         for file_name in filenames:
-            response = s3_client.upload_file(file_name, dumper.bucket, os.path.basename(file_name))
-
-
-@main.command()
-@click.pass_obj
-def cleanup(dumper):
-    """Delete old DB dumps."""
-    dumper.cleanup()
+            # response = s3_client.upload_file(file_name, dumper.bucket, os.path.basename(file_name))
+            blob = BlobClient.from_connection_string(conn_str=dumper.azure_key, container_name=bucket,
+                                                     blob_name=os.path.basename(file_name))
+            with open(file_name, "rb") as data:
+                blob.upload_blob(data)
 
 
 if __name__ == "__main__":

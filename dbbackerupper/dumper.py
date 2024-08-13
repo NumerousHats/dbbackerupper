@@ -19,7 +19,7 @@ class DbDumper:
     keep_days = 14
 
     def __init__(self, verbose=False, simulate=False, base_directory="", prefix="", dbs=None,
-                 aws_key=None, bucket=None, loginpath=None):
+                 aws_key=None, azure_key=None, bucket=None, loginpath=None):
         self.verbose = verbose
         self.simulate = simulate
         self.base_directory = base_directory
@@ -27,6 +27,7 @@ class DbDumper:
         self.dbs = dbs if type(dbs) is list else []
         self.bucket = bucket
         self.aws_key = aws_key
+        self.azure_key = azure_key
         self.loginpath = loginpath
 
     def run_shell(self, command):
