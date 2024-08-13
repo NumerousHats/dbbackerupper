@@ -45,10 +45,10 @@ def main(ctx, verbose, prefix, tempdir, simulate, bucket, loginpath):
     if "bucket" in config_vals and bucket is None:
         bucket = config_vals["bucket"]
 
-    # if "aws_access_key_id" in config_vals and "aws_secret_access_key" in config_vals:
-    #     aws_key = {"id": config_vals["aws_access_key_id"], "secret": config_vals["aws_secret_access_key"]}
-    # else:
-    #     raise ValueError("both access key id and secret access key must be provided in config file")
+    if "aws_access_key_id" in config_vals and "aws_secret_access_key" in config_vals:
+        aws_key = {"id": config_vals["aws_access_key_id"], "secret": config_vals["aws_secret_access_key"]}
+    else:
+        raise ValueError("both access key id and secret access key must be provided in config file")
 
     if "azure_connection_string" in config_vals:
         azure_connection_string = config_vals["azure_connection_string"]
