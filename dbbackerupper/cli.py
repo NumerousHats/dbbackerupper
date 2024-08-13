@@ -81,7 +81,7 @@ def dump(dumper, no_upload, database_list):
 
         for file_name in filenames:
             # response = s3_client.upload_file(file_name, dumper.bucket, os.path.basename(file_name))
-            blob = BlobClient.from_connection_string(conn_str=dumper.azure_key, container_name=bucket,
+            blob = BlobClient.from_connection_string(conn_str=dumper.azure_key, container_name=dumper.bucket,
                                                      blob_name=os.path.basename(file_name))
             with open(file_name, "rb") as data:
                 blob.upload_blob(data)

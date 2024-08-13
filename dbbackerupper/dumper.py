@@ -33,7 +33,7 @@ class DbDumper:
     def run_shell(self, command):
         """Run (or simulate the running) of a command via subprocess.call."""
         if self.simulate:
-            return "{} at {}".format(command, datetime.now())
+            return f"{command} at {datetime.now()}"
         else:
             subprocess.call(command, shell=True)
 
@@ -56,16 +56,15 @@ class DbDumper:
 
         for db in self.dbs:
             dump_out = self.run_shell(
-                "mysqldump --login-path={2} {0} --no-tablespaces --single-transaction --routines --set-gtid-purged=OFF --column-statistics=0 > {1}/{0}.sql".format(db,
-                                                                                                self.base_directory,
-                                                                                                self.loginpath))
+                (f"mysqldump --login-path={self.loginpath} {db} --no-tablespaces --single-transaction "
+                 f"--routines --set-gtid-purged=OFF --column-statistics=0 > {self.base_directory}/{db}.sql"))
             if self.simulate:
-                subprocess.call("echo '{2}' > {1}/{0}.sql".format(db, self.base_directory, dump_out), shell=True)
+                subprocess.call(f"echo '{dump_out}' > {self.base_directory}/{db}.sql", shell=True)
 
-        filename = "{0}_{1}.tar.gz".format(self.prefix, dt_string)
-        subprocess.call("cd {}; tar czf {} *.sql".format(self.base_directory, filename), shell=True)
-        subprocess.call("rm -f {}/*.sql".format(self.base_directory), shell=True)
-        files.append("{}/{}".format(self.base_directory, filename))
+        filename = f"{self.prefix}_{dt_string}.tar.gz"
+        subprocess.call(f"cd {self.base_directory}; tar czf {filename} *.sql", shell=True)
+        subprocess.call(f"rm -f {self.base_directory}/*.sql", shell=True)
+        files.append(f"{self.base_directory}/{filename}")
 
         return files
 
